@@ -39,7 +39,7 @@ def get_stroke_inputs():
                         columns=["age", "hypertension", "heart_disease", "avg_glucose_level", "bmi"])
 
 def plot_feature_importance(model, feature_names):
-    st.subheader("Feature Importance")
+    st.subheader("📌 Feature Importance")
     try:
         importances = model.feature_importances_
         indices = np.argsort(importances)[::-1]
@@ -53,13 +53,56 @@ def plot_feature_importance(model, feature_names):
         st.info("Feature importance not available for this model.")
 
 def main():
-    st.sidebar.title("🩺 Dual Disease Predictor")
-    page = st.sidebar.radio("Choose a model:", ["Heart Disease", "Stroke Risk", "Merged Dataset"])
+    with st.sidebar:
+        st.title("🩺 Dual Disease Predictor")
+        page = st.radio("Choose a tab:", [
+            "Project Overview", 
+            "Heart Disease", 
+            "Stroke Risk", 
+            "Merged Dataset"
+        ])
+        with st.expander("ℹ️ About This App"):
+            st.markdown("""
+            **CMSE 830 Midterm Project**  
+            Created by Humaira  
+            Fall 2025
+
+            This app predicts heart disease and stroke risk using real clinical data and machine learning models.
+            """)
 
     heart_model, stroke_model = load_models()
 
-    if page == "Heart Disease":
+    if page == "Project Overview":
+        st.title("🩺 Dual Disease Risk Explorer")
+        st.markdown("""
+        ### 🎬 Opening Scene: A Shared Risk Landscape
+        Cardiovascular disease is the leading cause of death globally, and stroke is one of its most devastating outcomes. 
+        While often studied separately, these conditions share many risk factors — age, hypertension, cholesterol, and more.
+
+        This app explores a powerful question:
+
+        > **Can we build a unified tool that helps people understand their risk for both heart disease and stroke — and see how these risks overlap?**
+
+        ---
+        ### 🔍 What You’ll Find in This App:
+        - **Heart Disease Predictor**: Input patient data and get a prediction
+        - **Stroke Risk Predictor**: Explore stroke risk based on key features
+        - **Merged Dataset Insights**: Visualize comorbidity and shared risk factors
+        - **Feature Importance**: See what drives each model’s decisions
+
+        ---
+        ### 🧠 Why It Matters
+        - Data science can bridge gaps between related conditions
+        - Interactive tools make complex models accessible
+        - Merged datasets reveal comorbid patterns that single-disease studies miss
+
+        This project is a story of connection — between datasets, between diseases, and between people and their health.
+        """)
+
+    elif page == "Heart Disease":
         st.title("❤️ Heart Disease Classifier")
+        st.markdown("### 🔍 Act I: Heart Disease Risk Modeling")
+        st.markdown("This model uses features like age, sex, chest pain, and cholesterol to predict cardiac risk.")
         user_input = get_heart_inputs()
         if st.button("Predict Heart Disease"):
             prediction = heart_model.predict(user_input)[0]
@@ -68,6 +111,8 @@ def main():
 
     elif page == "Stroke Risk":
         st.title("🧠 Stroke Risk Predictor")
+        st.markdown("### 🔍 Act II: Stroke Risk Modeling")
+        st.markdown("This model focuses on hypertension, glucose levels, and BMI to assess stroke risk.")
         user_input = get_stroke_inputs()
         if st.button("Predict Stroke Risk"):
             prediction = stroke_model.predict(user_input)[0]
@@ -75,18 +120,19 @@ def main():
 
     elif page == "Merged Dataset":
         st.title("📊 Merged Dataset Insights")
+        st.markdown("### 🔗 Act III: Exploring Comorbidity")
+        st.markdown("By merging the datasets, we explore how shared risk factors affect both diseases.")
         try:
             merged_df = pd.read_csv("data/merged_health_data.csv")
-            st.write("Explore shared risk factors across heart disease and stroke.")
 
-            st.subheader("Age Distribution by Disease")
+            st.subheader("📊 Age Distribution by Disease")
             st.bar_chart(merged_df.groupby("age")[["target", "stroke"]].sum())
 
-            st.subheader("Comorbidity Overlap")
+            st.subheader("🔁 Patients with Both Conditions")
             overlap = merged_df[(merged_df["target"] == 1) & (merged_df["stroke"] == 1)]
             st.write(f"Patients with both conditions: {len(overlap)}")
 
-            st.subheader("Correlation Heatmap")
+            st.subheader("🧪 Correlation Heatmap of Shared Features")
             numeric_df = merged_df.select_dtypes(include="number").dropna()
             fig, ax = plt.subplots(figsize=(10, 6))
             sns.heatmap(numeric_df.corr(), annot=True, cmap="coolwarm", ax=ax)
