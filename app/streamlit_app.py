@@ -66,8 +66,8 @@ def main():
         page = st.radio("Choose a tab:", [
             "Project Overview", 
             "Heart Disease", 
-            "Stroke Risk", 
-            "Merged Dataset"
+            "Stroke Risk",
+            "📂 Data & Model Insights"
         ])
         with st.expander("ℹ️ About This App"):
             st.markdown("""
@@ -83,28 +83,26 @@ def main():
     if page == "Project Overview":
         st.title("🩺 Dual Disease Risk Explorer")
         st.markdown("""
-        ### 🎬 Opening Scene: A Shared Risk Landscape
+        ### 🎬 Opening Scene: Two Conditions, Two Models
         Cardiovascular disease is the leading cause of death globally, and stroke is one of its most devastating outcomes. 
         While often studied separately, these conditions share many risk factors — age, hypertension, cholesterol, and more.
 
         This app explores a powerful question:
 
-        > **Can we build a unified tool that helps people understand their risk for both heart disease and stroke — and see how these risks overlap?**
+        > **Can we help people understand their risk for both heart disease and stroke — side by side?**
 
         ---
         ### 🔍 What You’ll Find in This App:
         - **Heart Disease Predictor**: Input patient data and get a prediction
         - **Stroke Risk Predictor**: Explore stroke risk based on key features
-        - **Merged Dataset Insights**: Visualize comorbidity and shared risk factors
         - **Feature Importance**: See what drives each model’s decisions
+        - **Data & Model Insights**: Explore the datasets and model behavior
 
         ---
         ### 🧠 Why It Matters
         - Data science can bridge gaps between related conditions
         - Interactive tools make complex models accessible
-        - Merged datasets reveal comorbid patterns that single-disease studies miss
-
-        This project is a story of connection — between datasets, between diseases, and between people and their health.
+        - Side-by-side predictors help users explore health risks more clearly
         """)
 
     elif page == "Heart Disease":
@@ -133,33 +131,63 @@ def main():
                 try:
                     prediction = stroke_model.predict(user_input)[0]
                     st.success("Prediction: Stroke Risk" if prediction == 1 else "Prediction: Low Risk")
+                    plot_feature_importance(stroke_model, user_input.columns)
                 except Exception as e:
                     st.error(f"Prediction failed: {e}")
             else:
                 st.warning("Stroke model not loaded.")
 
-    elif page == "Merged Dataset":
-        st.title("📊 Merged Dataset Insights")
-        st.markdown("### 🔗 Act III: Exploring Comorbidity")
-        st.markdown("By merging the datasets, we explore how shared risk factors affect both diseases.")
-        try:
-            merged_df = pd.read_csv("data/merged_health_data.csv")
+    elif page == "📂 Data & Model Insights":
+        st.title("📂 Data & Model Insights")
+        st.markdown("Explore the datasets and model performance for both heart disease and stroke prediction.")
 
-            st.subheader("📊 Age Distribution by Disease")
-            st.bar_chart(merged_df.groupby("age")[["target", "stroke"]].sum())
+        tab1, tab2 = st.tabs(["❤️ Heart Disease Dataset", "🧠 Stroke Dataset"])
 
-            st.subheader("🔁 Patients with Both Conditions")
-            overlap = merged_df[(merged_df["target"] == 1) & (merged_df["stroke"] == 1)]
-            st.write(f"Patients with both conditions: {len(overlap)}")
+        with tab1:
+            st.subheader("Heart Disease Dataset Overview")
+            try:
+                heart_df = pd.read_csv("data/heart.csv")
+                st.write("### Sample Data", heart_df.head())
+                st.write("### Summary Statistics")
+                st.dataframe(heart_df.describe())
 
-            st.subheader("🧪 Correlation Heatmap of Shared Features")
-            numeric_df = merged_df.select_dtypes(include="number").dropna()
-            fig, ax = plt.subplots(figsize=(10, 6))
-            sns.heatmap(numeric_df.corr(), annot=True, cmap="coolwarm", ax=ax)
-            st.pyplot(fig)
+                st.write("### Class Distribution")
+                st.bar_chart(heart_df["target"].value_counts())
 
-        except FileNotFoundError:
-            st.warning("⚠️ Merged dataset not found. Please upload 'data/merged_health_data.csv'.")
+                st.write("### Correlation Heatmap")
+                fig, ax = plt.subplots(figsize=(8, 5))
+                sns.heatmap(heart_df.corr(), annot=True, cmap="coolwarm", ax=ax)
+                st.pyplot(fig)
+
+                if heart_model is not None:
+                    st.write("### Feature Importance")
+                    plot_feature_importance(heart_model, heart_df.drop("target", axis=1).columns)
+
+            except FileNotFoundError:
+                st.warning("Heart dataset not found.")
+
+        with tab2:
+            st.subheader("Stroke Dataset Overview")
+            try:
+                stroke_df = pd.read_csv("data/stroke.csv")
+                st.write("### Sample Data", stroke_df.head())
+                st.write("### Summary Statistics")
+                st.dataframe(stroke_df.describe())
+
+                st.write("### Class Distribution")
+                st.bar_chart(stroke_df["stroke"].value_counts())
+
+                st.write("### Correlation Heatmap")
+                fig, ax = plt.subplots(figsize=(8, 5))
+                sns.heatmap(stroke_df.select_dtypes(include="number").corr(), annot=True, cmap="YlGnBu", ax=ax)
+                st.pyplot(fig)
+
+                if stroke_model is not None:
+                    st.write("### Feature Importance")
+                    plot_feature_importance(stroke_model, stroke_df.drop("stroke", axis=1).select_dtypes(include="number").columns)
+
+            except FileNotFoundError:
+                st.warning("Stroke dataset not found.")
 
 if __name__ == "__main__":
     main()
