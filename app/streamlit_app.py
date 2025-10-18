@@ -19,14 +19,22 @@ def load_models():
 def get_heart_inputs():
     st.subheader("Enter Patient Info for Heart Disease Prediction")
     age = st.slider("Age", 20, 80, 50)
-    sex = st.selectbox("Sex", ["Male", "Female"])
+    sex = st.radio("Sex", ["Male", "Female"])
     cp = st.selectbox("Chest Pain Type (cp)", [0, 1, 2, 3])
     chol = st.slider("Cholesterol (chol)", 100, 400, 200)
     trestbps = st.slider("Resting Blood Pressure (trestbps)", 90, 200, 120)
     thalach = st.slider("Max Heart Rate Achieved (thalach)", 60, 200, 150)
+
     sex_encoded = 1 if sex == "Male" else 0
-    return pd.DataFrame([[age, sex_encoded, cp, chol, trestbps, thalach]],
-                        columns=["age", "sex", "cp", "chol", "trestbps", "thalach"])
+
+    return pd.DataFrame([{
+        "age": age,
+        "sex": sex_encoded,
+        "cp": cp,
+        "chol": chol,
+        "trestbps": trestbps,
+        "thalach": thalach
+    }])
 
 def get_stroke_inputs():
     st.subheader("Enter Patient Info for Stroke Risk Prediction")
@@ -105,9 +113,15 @@ def main():
         st.markdown("This model uses features like age, sex, chest pain, and cholesterol to predict cardiac risk.")
         user_input = get_heart_inputs()
         if st.button("Predict Heart Disease"):
-            prediction = heart_model.predict(user_input)[0]
-            st.success("Prediction: Disease" if prediction == 1 else "Prediction: No Disease")
-            plot_feature_importance(heart_model, user_input.columns)
+            if heart_model is not None:
+                try:
+                    prediction = heart_model.predict(user_input)[0]
+                    st.success("Prediction: Disease" if prediction == 1 else "Prediction: No Disease")
+                    plot_feature_importance(heart_model, user_input.columns)
+                except Exception as e:
+                    st.error(f"Prediction failed: {e}")
+            else:
+                st.warning("Heart model not loaded.")
 
     elif page == "Stroke Risk":
         st.title("🧠 Stroke Risk Predictor")
@@ -115,8 +129,14 @@ def main():
         st.markdown("This model focuses on hypertension, glucose levels, and BMI to assess stroke risk.")
         user_input = get_stroke_inputs()
         if st.button("Predict Stroke Risk"):
-            prediction = stroke_model.predict(user_input)[0]
-            st.success("Prediction: Stroke Risk" if prediction == 1 else "Prediction: Low Risk")
+            if stroke_model is not None:
+                try:
+                    prediction = stroke_model.predict(user_input)[0]
+                    st.success("Prediction: Stroke Risk" if prediction == 1 else "Prediction: Low Risk")
+                except Exception as e:
+                    st.error(f"Prediction failed: {e}")
+            else:
+                st.warning("Stroke model not loaded.")
 
     elif page == "Merged Dataset":
         st.title("📊 Merged Dataset Insights")
