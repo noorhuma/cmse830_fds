@@ -85,7 +85,7 @@ Deployed app includes:
 - **User controls**: Feature sliders, dropdowns, and prediction buttons  
 - **Visuals**: Real-time plots, model metrics, and feature importance
 
-🔗 [App Link](https://your-deployment-url.streamlit.app) *(replace with actual URL)*
+🔗 [App Link](https://cmse830fds-2bhdrzewhthtpjpeqr5kdd.streamlit.app/)
 
 ---
 

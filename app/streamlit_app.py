@@ -1,8 +1,10 @@
-## 1. Import libraries
 import streamlit as st
-import pandas as pd
-import joblib
 
-## 2. Load Models
-heart_model = joblib.load("app/heart_model.pkl")
-stroke_model = joblib.load("app/stroke_model.pkl")
+st.set_page_config(page_title="Test App", layout="wide")
+
+def main():
+    st.title("✅ Streamlit is Working")
+    st.write("If you see this message, your app is rendering correctly.")
+
+if __name__ == "__main__":
+    main()
