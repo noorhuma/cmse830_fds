@@ -15,11 +15,18 @@ from sklearn.impute import SimpleImputer
 
 from src.evaluate import plot_confusion, plot_roc, plot_feature_importance
 
+# -------------------------------
+# Setup outputs directory
+# -------------------------------
 OUT_DIR = os.path.abspath(os.path.join(os.getcwd(), "outputs"))
 os.makedirs(OUT_DIR, exist_ok=True)
 print("Outputs directory:", OUT_DIR)
 
+# -------------------------------
+# Helper functions
+# -------------------------------
 def save_plot(fig, filename):
+    """Save matplotlib figure safely to outputs/"""
     output_path = os.path.join(OUT_DIR, filename)
     try:
         fig.savefig(output_path, bbox_inches="tight")
@@ -32,15 +39,19 @@ def save_plot(fig, filename):
         print(f"❌ Error saving {filename}: {e}")
 
 def evaluate_model(model, X_test, y_test, feature_names, prefix):
+    """Evaluate model and save plots + metrics"""
     y_pred = model.predict(X_test)
     y_proba = model.predict_proba(X_test)[:, 1]
 
+    # Confusion matrix
     fig = plot_confusion(y_test, y_pred, title=f"{prefix} Confusion Matrix")
     save_plot(fig, f"{prefix}_confusion.png")
 
+    # ROC curve
     fig = plot_roc(y_test, y_proba, title=f"{prefix} ROC Curve")
     save_plot(fig, f"{prefix}_roc.png")
 
+    # Feature importance (RF only)
     if hasattr(model, "feature_importances_"):
         fig = plot_feature_importance(model, feature_names, title=f"{prefix} Feature Importance")
         save_plot(fig, f"{prefix}_feature_importance.png")
@@ -51,61 +62,52 @@ def evaluate_model(model, X_test, y_test, feature_names, prefix):
         "AUC": roc_auc_score(y_test, y_proba),
     }
 
+# -------------------------------
+# Main training loop
+# -------------------------------
 def run_all_datasets():
     metrics = {}
     datasets = {
         "heart": ("data/heart.csv", "target"),
         "diabetes": ("data/diabetes.csv", "Outcome"),
+        "stroke": ("data/stroke.csv", "stroke"),   # ✅ stroke always included
     }
+    print("Datasets configured keys:", list(datasets.keys()))
+
+    # 👉 Diagnostic print to confirm keys
+    print("Datasets configured keys:", list(datasets.keys()))
 
     for name, (path, target_col) in datasets.items():
         print(f"\n=== Training on {name} dataset ===")
 
+        # Load dataset
         df = pd.read_csv(path)
+        print(f"{name} dataset shape: {df.shape}")
+        print(f"{name} columns: {list(df.columns)}")
+        print(f"NaN counts in raw {name} dataset:\n{df.isna().sum()}")
 
-        # Drop rows with missing target
         df = df.dropna(subset=[target_col])
 
-        # 🚨 Diagnostic: show NaN counts before cleaning
-        print(f"NaN counts in raw {name} dataset:")
-        print(df.isna().sum())
-
-        # Special cleaning for stroke dataset
-        if name == "stroke":
-            if "smoking_status" in df.columns:
-                df["smoking_status"] = df["smoking_status"].fillna("Unknown")
-            if "bmi" in df.columns:
-                df["bmi"] = df["bmi"].fillna(df["bmi"].median())
-            # Drop any rows still containing NaNs
-            before = len(df)
-            df = df.dropna()
-            after = len(df)
-            print(f"Stroke dataset: dropped {before - after} rows with remaining NaNs")
-            print("Remaining NaNs after cleaning:", df.isna().sum().sum())
-
+        # Split features/target
         X = df.drop(columns=[target_col])
         y = df[target_col]
 
-        # One-hot encode categorical features
-        X_encoded = pd.get_dummies(X, drop_first=True)
+        # ✅ Stroke is already encoded, so skip get_dummies
+        if name == "stroke":
+            X_encoded = X.copy()
+        else:
+            X_encoded = pd.get_dummies(X, drop_first=True)
 
-        # Impute missing values (most frequent for categorical safety)
+        # Impute missing values
         imputer = SimpleImputer(strategy="most_frequent")
         X_clean = imputer.fit_transform(X_encoded)
 
-        # Drop any rows that still contain NaNs
+        # Convert back to DataFrame
         X_clean_df = pd.DataFrame(X_clean, columns=X_encoded.columns)
-        before_drop = len(X_clean_df)
         mask = ~X_clean_df.isna().any(axis=1)
         X_clean_df = X_clean_df[mask]
-        after_drop = len(X_clean_df)
-        if before_drop - after_drop > 0:
-            print(f"Dropped {before_drop - after_drop} rows with remaining NaNs in {name} dataset")
-
-        # Align y with cleaned X
         y = y.iloc[X_clean_df.index]
 
-        # Convert back to numpy for training
         X_clean = X_clean_df.values
         feature_names = list(X_encoded.columns)
 
@@ -116,33 +118,53 @@ def run_all_datasets():
 
         metrics[name] = {}
 
-        # Scale features for Logistic Regression
+        # Logistic Regression
         scaler = StandardScaler()
         X_train_scaled = scaler.fit_transform(X_train)
         X_test_scaled = scaler.transform(X_test)
 
-        # 🚨 Final scrub: replace any NaNs/Infs with 0
         X_train_scaled = np.nan_to_num(X_train_scaled, nan=0.0, posinf=0.0, neginf=0.0)
         X_test_scaled = np.nan_to_num(X_test_scaled, nan=0.0, posinf=0.0, neginf=0.0)
 
-        # Logistic Regression
         logreg = LogisticRegression(max_iter=5000)
         logreg.fit(X_train_scaled, y_train)
         metrics[name]["logreg"] = evaluate_model(
             logreg, X_test_scaled, y_test, feature_names, prefix=f"{name}_logreg"
         )
 
-        # Random Forest (no scaling needed)
+        # Random Forest
         rf = RandomForestClassifier(random_state=42)
         rf.fit(X_train, y_train)
         metrics[name]["rf"] = evaluate_model(
             rf, X_test, y_test, feature_names, prefix=f"{name}_rf"
         )
 
+    # Save metrics
     metrics_path = os.path.join(OUT_DIR, "metrics.json")
     with open(metrics_path, "w") as f:
         json.dump(metrics, f, indent=4)
     print(f"\n✅ Metrics saved to {metrics_path}")
 
+    # -------------------------------
+    # Diagnostic check for stroke outputs
+    # -------------------------------
+    print("\nChecking outputs after training...")
+    expected_files = [
+        "stroke_logreg_confusion.png",
+        "stroke_logreg_roc.png",
+        "stroke_rf_confusion.png",
+        "stroke_rf_roc.png",
+        "stroke_rf_feature_importance.png"
+    ]
+    for fname in expected_files:
+        fpath = os.path.join(OUT_DIR, fname)
+        if os.path.exists(fpath):
+            print(f"✅ Found {fname} ({os.path.getsize(fpath)} bytes)")
+        else:
+            print(f"⚠️ Missing {fname}")
+
+# -------------------------------
+# Entry point
+# -------------------------------
 if __name__ == "__main__":
     run_all_datasets()

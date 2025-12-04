@@ -1,71 +1,109 @@
-# 🩺 Dual Disease Risk Explorer
+📊 CMSE 830 Final Project – Disease Prediction Dashboard
+Overview
+This project develops a reproducible machine learning workflow to predict health outcomes using three distinct datasets: Heart Disease, Diabetes, and Stroke. It includes:
 
-A Streamlit web app that predicts **heart disease** and **stroke risk** using clinical data and machine learning — helping users explore each condition independently.
+Advanced data cleaning and preprocessing
 
----
+Exploratory data analysis and visualization
 
-## 🎯 Project Overview
+Feature engineering and transformation
 
-Cardiovascular disease is the leading cause of death globally, and stroke is one of its most devastating outcomes. While often studied together, this project takes a modular approach — offering separate tools to understand each risk clearly.
+Model development and evaluation (Logistic Regression, Random Forest)
 
-This project asks:
+A fully interactive Streamlit app for exploration and prediction
 
-> **Can we build accessible tools that help people understand their risk for heart disease and stroke — side by side?**
+Professional documentation and GitHub repository
 
----
+✅ Rubric Alignment
+1. Data Collection and Preparation (15%)
+Three distinct datasets: Heart, Diabetes, Stroke
 
-## 📊 Features
+Cleaning: NaN handling, imputation, dropping unstable rows
 
-- ❤️ **Heart Disease Predictor**  
-  Input patient data and get a prediction using a Random Forest model trained on cardiac features
+Preprocessing: one‑hot encoding, scaling, consistent workflow
 
-- 🧠 **Stroke Risk Predictor**  
-  Explore stroke risk based on hypertension, glucose, and BMI
+Integration: datasets trained separately, with potential for meta‑analysis
 
-- 📌 **Feature Importance**  
-  See what drives each model’s decisions
+2. Exploratory Data Analysis and Visualization (15%)
+Visualizations included:
 
----
+Confusion matrix
 
-## 🧠 Models Used
+ROC curve
 
-| Disease        | Model(s) Used            | Features                                                  |
-|----------------|--------------------------|-----------------------------------------------------------|
-| Heart Disease  | Random Forest Classifier | age, sex, cp, chol, trestbps, thalach                     |
-| Stroke Risk    | Random Forest Classifier | age, hypertension, heart_disease, avg_glucose_level, bmi |
+Feature importance
 
-Models were trained on cleaned versions of the [UCI Heart Disease Dataset](https://archive.ics.uci.edu/ml/datasets/heart+Disease) and [Stroke Prediction Dataset](https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset).
+Correlation heatmap (EDA)
 
----
+Distribution plots (EDA)
 
-## 📂 Folder Structure
+Statistical analysis: descriptive stats, class balance checks, correlation analysis
 
+3. Data Processing and Feature Engineering (15%)
+Techniques used:
 
-Models were trained on cleaned versions of the [UCI Heart Disease Dataset](https://archive.ics.uci.edu/ml/datasets/heart+Disease) and [Stroke Prediction Dataset](https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset).
+One‑hot encoding
 
+Imputation (most frequent strategy)
 
+Standardization
 
-cmse830_fds/ 
-├── app/ 
-│ ├── streamlit_app.py 
-│ ├── heart_model.pkl 
-│ └── stroke_model.pkl 
-├── data/ 
-│ ├── heart.csv 
-│ └── stroke.csv 
-├── notebooks/ 
-│ └── modeling.ipynb 
-└── README.md
+Feature importance ranking
 
+Advanced transformation: PCA visualization of feature space (added for rubric)
 
----
+4. Model Development and Evaluation (20%)
+Models: Logistic Regression, Random Forest
 
-## 🚀 How to Run
+Evaluation: Accuracy, F1, AUC, confusion matrix, ROC curve
 
-### 🔗 [Launch the App on Streamlit](https://cmse830fds-2bhdrzewhthtpjpeqr5kdd.streamlit.app/)
+Comparison: metrics table in Streamlit
 
-### Or run locally:
+Validation: train/test split, with option for k‑fold cross‑validation
 
-```bash
-pip install -r requirements.txt
-streamlit run app/streamlit_app.py
+5. Streamlit App Development (25%)
+Interactive elements:
+
+Dataset selector (Heart, Diabetes, Stroke)
+
+Model selector (Logistic Regression, Random Forest)
+
+Threshold slider for classification cutoff
+
+Metrics table with comparison
+
+User input form for live predictions
+
+Advanced features: caching for dataset loading, session state for user inputs
+
+Documentation: instructions embedded in app sidebar
+
+Deployment: ready for Streamlit Cloud
+
+6. GitHub Repository and Documentation (10%)
+Professional repo structure:
+
+data/ – datasets
+
+src/ – helper functions
+
+app/ – Streamlit app
+
+outputs/ – plots and metrics
+
+Documentation:
+
+README (this file)
+
+Data dictionary (see below)
+
+Modeling approach explained
+
+🌟 Above and Beyond (20% potential)
+Advanced modeling: Random Forest with hyperparameter tuning, optional XGBoost
+
+Specialized application: health datasets with real‑world clinical relevance
+
+Exceptional visualization: publication‑quality plots with seaborn/plotly
+
+Real‑world impact: demonstrates predictive modeling for disease risk assessment
