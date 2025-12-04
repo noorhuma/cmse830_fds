@@ -1,6 +1,1 @@
-streamlit
-scikit-learn
-pandas
-matplotlib
-seaborn
-joblib
+pyyaml==6.0.2
