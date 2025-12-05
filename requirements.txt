@@ -1,1 +1,8 @@
 pyyaml==6.0.2
+streamlit
+pandas
+numpy
+scikit-learn
+seaborn
+plotly
+matplotlib
